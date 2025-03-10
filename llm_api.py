@@ -168,10 +168,10 @@ class MultilingualAzureChatbot:
             consulta = "canciones divertidas para estar feliz" if "español" in idioma.lower() else "funny videos to stay happy"
 
         try:
-            print("🔎 Buscando videos en YouTube...")
+            print("Buscando videos en YouTube...")
             resultados = self.youtube_tool.run(consulta)  # Devuelve un string con una URL
 
-            print(f"📥 Resultado obtenido: {resultados}")
+            print(f"Resultado obtenido: {resultados}")
 
             # 🔹 Extraer la primera URL del string usando una expresión regular
             match = re.search(r'https?://[^\s]+', resultados)
@@ -180,15 +180,15 @@ class MultilingualAzureChatbot:
                 raise ValueError("No se encontró una URL válida en el resultado.")
 
             enlace = match.group(0)  # 🔹 Extrae la primera URL encontrada
-            print(f"🎥 Enlace extraído: {enlace}")
+            print(f"Enlace extraído: {enlace}")
 
             # 🔹 Obtener título del video
             titulo = self.obtener_titulo_video(enlace)
-            print(f"✅ Título del video: {titulo}")
+            print(f"Título del video: {titulo}")
 
             return f"- {titulo}: {enlace}"
         except Exception as e:
-            print(f"❌ Error al buscar videos: {e}")
+            print(f"Error al buscar videos: {e}")
             return "Error al obtener videos."
 
 
@@ -218,45 +218,7 @@ class MultilingualAzureChatbot:
             cls.ram_storage[session_id] = history
 
             return history
-    # @classmethod
-    # def get_session_history(cls, session_id: str) -> ChatMessageHistory:
-    #     """Recupera el historial de la sesión desde la memoria RAM o la base de datos si no está en RAM"""
-
-    #     # 🔹 Si la sesión ya está en memoria, úsala y evita consultar SQLite
-    #     if session_id in cls.ram_storage:
-    #         print('Se recupero de la memoria')
-    #         return cls.ram_storage[session_id]
-
-    #     # 🔹 Si no está en memoria, recupera de la base de datos
-    #     print('recuperando de la bd')
-    #     with get_db() as conn:
-    #         cursor = conn.cursor()
-    #         cursor.execute("""
-    #             SELECT role, content FROM historial_mensajes 
-    #             WHERE session_id = ? 
-    #             ORDER BY timestamp ASC
-    #             LIMIT 4
-    #         """, (session_id,))
-    #         messages = cursor.fetchall()
-
-    #         # 🔹 Crea un historial vacío
-    #         history = ChatMessageHistory()
-
-    #         # 🔹 Cargar los mensajes recuperados desde SQLite
-    #         for row in messages:
-    #             if row["role"] == "human":
-    #                 history.add_message(HumanMessage(content=row["content"]))
-    #             elif row["role"] == "ai":
-    #                 history.add_message(AIMessage(content=row["content"]))
-
-    #         # 🔹 Almacenar el historial en memoria para futuras consultas rápidas
-    #         print('se almaceno en la memoria')
-    #         cls.ram_storage[session_id] = history
-
-    #         return history
-
-
-        
+            
     def guardar_mensaje_historial(self, conn, usuario_id, session_id, role, content):
         """Guarda un mensaje en el historial"""
         idioma = self.detectar_idioma(content)
