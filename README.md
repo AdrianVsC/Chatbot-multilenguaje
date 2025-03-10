@@ -1,6 +1,7 @@
 # Chatbot Prueba Técnica Nolatech
 
-Chatbot Adrian es un asistente conversacional basado en Azure OpenAI y Streamlit. Puede responder en múltiples idiomas, recordar conversaciones previas y recomendar canciones según el sentimiento del usuario.
+Chatbot Adrian es un asistente conversacional basado en Azure OpenAI, langchain y Streamlit. Puede responder en múltiples idiomas, recordar conversaciones previas y recomendar canciones según el sentimiento del usuario.
+Este proyecto se apoya en Langchain, tanto en sus herramientas como en su capacidad para encadenar funciones con el fin de conectar con la API de Youtube y recordar conversaciones que se guardaban tanto en la memoria RAM, como en la base SQLite3
 
 ## 🚀 Instalación
 
