@@ -328,11 +328,11 @@ async def main():
     while True:
         prompt = input("👤 Usuario: ")  # Recibe el input del usuario
         if prompt.lower() == "exit":
-            print("👋 Saliendo del chatbot...")
+            print("Saliendo del chatbot...")
             break  # Cierra el programa
 
         respuesta = await bot.generar_respuesta("Angelo", "session_010", prompt)
-        print(f"💬 Chatbot: {respuesta}\n")
+        print(f"Chatbot: {respuesta}\n")
 
 if __name__ == "__main__":
     asyncio.run(main())  #Ejecutamos el loop de asyncio correctamente
