@@ -3,7 +3,9 @@ import sqlite3
 import uuid
 import datetime
 from contextlib import contextmanager
-import asyncio  
+import asyncio 
+import re 
+import random
 
 # Langchain + Azure OpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -11,6 +13,9 @@ from langchain.chat_models import AzureChatOpenAI
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain.schema import SystemMessage, HumanMessage, AIMessage
 from langchain.memory import ChatMessageHistory
+
+from langchain_community.tools import YouTubeSearchTool
+import yt_dlp
 
 # Detección de Lenguaje y Sentimiento
 from langdetect import detect
@@ -92,12 +97,20 @@ class MultilingualAzureChatbot:
         )
 
         self.prompt = ChatPromptTemplate.from_messages([
-            ('system', 'Eres un asistente multilingual y el idioma que usarás ahora será {idioma}. Ajusta tu respuesta según el contexto de la conversación y el sentimiento {sentimiento} del usuario. Si el tema de conversacion no esta relacionado con pokemons responde que no tienes conocimiento al respecto.'),
+            ('system', 
+             """
+             ***REGLAS DE CONVERSACIÓN***
+             1.Si el sentimiento del usuario es negativo {sentimiento}, responde su consulta con normalidad pero además recomiéndale un video alegre {video}. Si el sentimiento es positivo o neutro, responde con normalidad, no es necesario recomendar un video.
+             2.La recomendación de la canción incluirá el nombre de la canción y un enlace de YouTube: {video}.
+             3.Responde en el idioma preferido del usuario: {idioma}.
+            """),
             MessagesPlaceholder(variable_name='history'),
             ('human', '{input}'),
         ])
     
-        self.runnable = self.prompt | self.llm    
+        self.runnable = self.prompt | self.llm 
+
+        self.yt_tool = YouTubeSearchTool()
 
     def detectar_idioma(self, texto: str) -> str:
         """Detecta el idioma del texto y devuelve su nombre completo."""
@@ -153,6 +166,26 @@ class MultilingualAzureChatbot:
             cls.ram_storage[session_id] = history
 
             return history
+    
+
+    def obtener_video(self, sentimiento : str, idioma : str) -> str:
+        """Obtiene un el URL de un video de YouTube según el sentimiento y el idioma"""
+        consulta = ""
+        if sentimiento == "negativo":
+            consulta = "canciones motivacionales para animarse" if "español" in idioma.lower() else "uplifting videos to cheer up"
+        try:
+
+            video = self.yt_tool.run(consulta)
+
+            match = re.search(r'https?://[^\s]+', video)
+            if not match:
+                raise ValueError("No se encontró una URL válida en el resultado.")
+            enlace = match.group(0)  
+
+            return f"- {enlace}"
+        
+        except Exception as e:
+            return print(f"Error al obtener el video: {e}")
 
     def guardar_mensaje_historial(self, conn, usuario_id, session_id, role, content):
         """Guarda un mensaje en el historial"""
@@ -174,6 +207,10 @@ class MultilingualAzureChatbot:
         """Genera una respuesta ajustada según el sentimiento y el idioma preferido de la sesion"""
         idioma_preferido = self.idioma_preferido_usuario(usuario_id)
         sentimiento = self.analizar_sentimiento(mensaje)
+        if sentimiento == "negativo": 
+            video = self.obtener_video(sentimiento, idioma_preferido)
+        else:
+            video = 'No es necesario recomendar un video.'
 
         with get_db() as conn:
             history = self.get_session_history(session_id)
@@ -200,7 +237,7 @@ class MultilingualAzureChatbot:
                 )
             
             res = with_message_history.invoke(
-            {'idioma':idioma_preferido ,'sentimiento':sentimiento,'input':mensaje},
+            {'idioma':idioma_preferido ,'sentimiento':sentimiento, 'video':video,'input':mensaje},
             config={'configurable':{'session_id':session_id}})
 
             # Obtener la respuesta limpia
