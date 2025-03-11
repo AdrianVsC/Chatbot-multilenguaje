@@ -251,21 +251,3 @@ class MultilingualAzureChatbot:
             return respuesta_final
 
 
-# Prueba del Chatbot
-async def main():
-    setup_database()
-    bot = MultilingualAzureChatbot()
-
-    print("🔄Chatbot iniciado. Escribe 'exit' para salir.")
-
-    while True:
-        prompt = input("👤 Usuario: ")  # Recibe el input del usuario
-        if prompt.lower() == "exit":
-            print("👋 Saliendo del chatbot...")
-            break  # Cierra el programa
-
-        respuesta = await bot.generar_respuesta("Adrian", "session_001", prompt)
-        print(f"💬 Chatbot: {respuesta}\n")
-
-if __name__ == "__main__":
-    asyncio.run(main())  
